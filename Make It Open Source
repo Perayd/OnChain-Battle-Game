@@ -1,0 +1,8 @@
+crypto-battle-game/
+ ├── contracts/
+ │   └── CryptoBattleGame.sol
+ ├── frontend/
+ │   ├── index.html
+ │   └── app.js
+ ├── README.md
+ └── LICENSE (MIT)
