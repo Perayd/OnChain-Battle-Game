@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract CryptoBattleGame {
+
+    struct Player {
+        address playerAddress;
+        uint256 power;
+    }
+
+    Player public player1;
+    Player public player2;
+
+    uint256 public entryFee = 0.01 ether;
+    address public owner;
+
+    event PlayerJoined(address indexed player, uint256 power);
+    event BattleResult(address winner, uint256 reward);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function joinGame() external payable {
+        require(msg.value == entryFee, "Incorrect entry fee");
+
+        uint256 randomPower = uint256(
+            keccak256(
+                abi.encodePacked(block.timestamp, msg.sender, block.prevrandao)
+            )
+        ) % 100 + 1;
+
+        if (player1.playerAddress == address(0)) {
+            player1 = Player(msg.sender, randomPower);
+        } else {
+            require(player2.playerAddress == address(0), "Game full");
+            player2 = Player(msg.sender, randomPower);
+            _battle();
+        }
+
+        emit PlayerJoined(msg.sender, randomPower);
+    }
+
+    function _battle() internal {
+        address winner;
+
+        if (player1.power >= player2.power) {
+            winner = player1.playerAddress;
+        } else {
+            winner = player2.playerAddress;
+        }
+
+        uint256 reward = address(this).balance;
+        payable(winner).transfer(reward);
+
+        emit BattleResult(winner, reward);
+
+        delete player1;
+        delete player2;
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner);
+        payable(owner).transfer(address(this).balance);
+    }
+}
